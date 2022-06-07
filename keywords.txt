@@ -1,0 +1,10 @@
+pidmotor	KEYWORD1
+
+get_coeffs	KEYWORD2
+move	KEYWORD2
+compute	KEYWORD2
+test_sys	KEYWORD2
+calibrate	KEYWORD2
+set_motor_limit	KEYWORD2
+set_coeffs	KEYWORD2
+readenc()	KEYWORD2
