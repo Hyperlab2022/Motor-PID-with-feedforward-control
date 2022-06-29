@@ -42,9 +42,12 @@ void pidmotor::move(int dir, byte pwmval) {
   }
 }
 void pidmotor::set_coeffs(float _kp, float _ki, float _kd) {
-  kp = _kp * 2;
-  ki = _ki * 1.4;
-  kd = _kd * 1.4;
+  //  kp = _kp * 2;
+  //  ki = _ki * 1.4;
+  //  kd = _kd * 1.4;
+  kp = _kp;
+  ki = _ki;
+  kd = _kd;
   //  EEPROM.writeFloat(address, kp);
   //  address += sizeof(kp);
   //  EEPROM.writeFloat(address, ki);
@@ -110,7 +113,8 @@ void IRAM_ATTR pidmotor::compute(volatile int target) {
   eintegral += (e * time_change);
   if (eintegral > 255) eintegral = 255;
   else if (eintegral < 0) eintegral = 0;
-  float u = kp * e + ki * eintegral + kd * dedt - target * (kd / kp);
+  //  float u = kp * e + ki * eintegral + kd * dedt - target * (kd / kp);
+  float u = kp * e + ki * eintegral + kd * dedt + target * 0.011;
   float pwr = fabs(u);
   previous_error = e;
   if ( pwr > 255 ) pwr = 255;
