@@ -8,7 +8,7 @@
 
 pidmotor::pidmotor(byte _PWM, byte _IN1, byte _IN2, byte _limit, Encoder *enc) {
   Serial.begin(115200);
-  EEPROM.begin(EEPROM_SIZE);
+  //EEPROM.begin(EEPROM_SIZE);
   //  Encoder _myenc(_ENCA, _ENCB);
   //  myenc = _myenc;
   this->enc = enc;
@@ -21,6 +21,10 @@ pidmotor::pidmotor(byte _PWM, byte _IN1, byte _IN2, byte _limit, Encoder *enc) {
   pinMode(_IN2, OUTPUT);
   pinMode(limit, INPUT_PULLUP);
   speed = 255;
+}
+void pidmotor::setinputlimits(double mininput, double maxinput) {
+  mmin = mininput;
+  mmax = maxinput;
 }
 void pidmotor::move(int dir, byte pwmval) {
   analogWrite(PWM, pwmval);
@@ -38,9 +42,9 @@ void pidmotor::move(int dir, byte pwmval) {
   }
 }
 void pidmotor::set_coeffs(float _kp, float _ki, float _kd) {
-  kp = _kp;
-  ki = _ki * 2;
-  kd = _kd * 1.5;
+  kp = _kp * 2;
+  ki = _ki * 1.4;
+  kd = _kd * 1.4;
   //  EEPROM.writeFloat(address, kp);
   //  address += sizeof(kp);
   //  EEPROM.writeFloat(address, ki);
@@ -97,27 +101,22 @@ bool pidmotor::calibrate(int input_target) {
   }
   return 1;
 }
-void pidmotor::compute(volatile float x) {
-  volatile float target = constrain(x, mmin, mmax);
+void IRAM_ATTR pidmotor::compute(volatile int target) {
   long current_time = micros();
-  //  int target = t;
   float time_change = ((float) (current_time - previous_time)) / ( 1.0e6 );
   previous_time = current_time;
   int e = enc->read() - target;
-  //  int ag_err = abs(target - enc->read());
-  float dedt = (e - previous_error) / (time_change);
-  eintegral = eintegral + e * time_change;
-  float u = kp * e + kd * dedt + ki * eintegral;
+  float dedt = (e - previous_error) / time_change;
+  eintegral += (e * time_change);
+  if (eintegral > 255) eintegral = 255;
+  else if (eintegral < 0) eintegral = 0;
+  float u = kp * e + ki * eintegral + kd * dedt - target * (kd / kp);
   float pwr = fabs(u);
-  if ( pwr > 255 ) {
-    pwr = 255;
-  }
-  int dir = -1;
-  if (u < 0) {
-    dir = 1;
-  }
-  move(dir, pwr * 1.05);
   previous_error = e;
+  if ( pwr > 255 ) pwr = 255;
+  int dir = -1;
+  if (u < 0) dir = 1;
+  move(dir, pwr);
   //  Serial.printf("%.2f\t%.2f\t%.2f\n", kp, ki, kd);
 }
 bool pidmotor::test_sys(int tar) {
@@ -134,15 +133,12 @@ bool pidmotor::test_sys(int tar) {
   Serial.printf("System Tested Successfully\n");
   return 1;
 }
-//int32_t pidmotor::readenc() {
-//  return enc->read();
-//}
-bool pidmotor::test_cal() {
+bool pidmotor::test_cal(int tar) {
   if (!cal_flag) {
     Serial.printf("Error testing the calibration, First calibrate the motor and then run this function"); return 0;
   }
   else {
-    compute(1320);
+    compute(tar);
     return 1;
   }
 }
