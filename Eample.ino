@@ -24,8 +24,9 @@ void setup() {
   vTaskSuspend(pid_compute);
   delay(50);
   Serial.println("setup");
-  Motor.calibrate();
-  Motor.test_cal();
+//   Motor.calibrate();
+//   Motor.test_cal();
+  Motor.set_coeffs(9, 0.0001, 0.1); //These coeffs worked pretty fine for my system.
   vTaskResume(pid_compute);
 }
 //use serial motor to test the motor
@@ -38,8 +39,9 @@ void loop() {
     switch (c) {
       case 'm': {
           int x = Serial.parseInt();
-          f = x / 1.63;
-          break;
+          f = x / 1.63; // change the value of 1.63 as per your encoder's full rotation counts. By inputting degree it'll move the motor in degrees rather than pulses/counts
+        // (Encoder full rotation counts/360 = 1.63)  
+        break;
         }
       case 'X': {
           while (digitalRead(H)) Motor.move(0, 100);
