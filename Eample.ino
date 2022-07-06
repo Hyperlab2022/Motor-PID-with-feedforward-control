@@ -26,7 +26,7 @@ void setup() {
   Serial.println("setup");
 //   Motor.calibrate();
 //   Motor.test_cal();
-  Motor.set_coeffs(9, 0.0001, 0.1); //These coeffs worked pretty fine for my system.
+  Motor.set_coeffs(9, 0.000001, 0.01); //These coeffs worked pretty fine for my system.
   vTaskResume(pid_compute);
 }
 //use serial motor to test the motor
